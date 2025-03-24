@@ -1,0 +1,41 @@
+{
+  "variables": {
+    "region": "us-east-1",
+    "instance_type": "t2.micro",
+    "aws_key_pair_name": "MyEC2KeyPair"
+  },
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "region": "{{user `region`}}",
+      "source_ami_filter": {
+        "filters": {
+          "virtualization-type": "hvm",
+          "name": "amzn2-ami-hvm-*-x86_64-gp2",
+          "root-device-type": "ebs"
+        },
+        "owners": [
+          "137112412989"
+        ],
+        "most_recent": true
+      },
+      "instance_type": "{{user `instance_type`}}",
+      "ssh_username": "ec2-user",
+      "ami_name": "custom-amazon-linux-ami-packer",
+      "ssh_keypair_name": "{{user `aws_key_pair_name`}}",
+      "ssh_private_key_file": "~/MyEC2KeyPair.pem"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "sudo yum update -y",
+        "sudo amazon-linux-extras install docker -y",
+        "sudo service docker start",
+        "sudo usermod -a -G docker ec2-user",
+        "newgrp docker"
+      ]
+    }
+  ]
+}
