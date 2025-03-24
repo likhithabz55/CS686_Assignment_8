@@ -16,7 +16,7 @@ Make the below changes in the file to run locally.
 
 Update region, instance_type and aws_key_pair_name inside variables.
 Aws_key_pair_name will be the name of the KeyPair we create on AWS console and whose private key we use to access instances.
-Update the path to private SSH key (.pem file) inside the builders. 
+Update the path to private SSH key (.pem file) inside the builders.
            
 
 
