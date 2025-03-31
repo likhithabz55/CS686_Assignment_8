@@ -1,83 +1,48 @@
                                                     Packer & Terraform
+#Project
+This project provisions ec2 instances and verifies installation of docker and disk usage 
+using terraform and ansible.
 
+## Features
+- Provisions 6 EC2 instances (3 Ubuntu, 3 Amazon Linux)
+- Configures an Ansible controller for automation
 
-This is a sample project where we use packer and Terraform to create and provision custom AMI, VPC, subnets and EC2 instances.
+## Step 1
+- Before running the .tf file, configure aws credentials(id, access_key and session_token) or store them in .aws/credentials file.
+- run the below commands to provison 6 + 1 ec2 instances.
+- terraform init
+- terraform plan
+- terraform apply
+- The above commands will provision ec2 resources and create public and private subnets.
+- ![Screenshot_1.png](images/Screenshot_1.png)
 
-A.  Create a custom AWS AMI using Packer that contains the following:
-Amazon Linux
-Docker
-Your SSH public key is set so you can login using your private key
+## Step 2
+- Update inventory.ini file with the private ip addresses of your 6 ec2 instances except ansible controller one.
 
+## Step 3
 
-To create a custom AWS AMI with the above specifications using packer,
-We need to build the packer.json file.
-Make the below changes in the file to run locally.
+- Copy below files through scp to the bastion host using its public ip
+- scp -i <path to ssh key .pem> <path to ssh key .pem> ec2-user@<public_ip>:~/    (copies ssh key .pem file)
+- scp -i <path to ssh key .pem> <path_to_inventory.ini file> ec2-user@<public_ip>:~/
+- scp -i <path to ssh key .pem> <path_to_playbook.ini file> ec2-user@<public_ip>:~/
 
+## Step 4
 
-Update region, instance_type and aws_key_pair_name inside variables.
-Aws_key_pair_name will be the name of the KeyPair we create on AWS console and whose private key we use to access instances.
-Update the path to private SSH key (.pem file) inside the builders.
-           
+- SSH to the bastion host using its public IP
+- ssh -i <path to ssh key> ec2-user@<public ip>
 
+## Step 5
+- Similar to step 5, copy the files ssh key, inventory.ini and playbook.yml from bastion host to the ansible-controller ec2 through scp using its private ip.
+- scp -i <path to ssh key .pem> <path to ssh key .pem> ec2-user@<private_ip>:~/    (copies ssh key .pem file)
+- scp -i <path to ssh key .pem> <path_to_inventory.ini file> ec2-user@<private_ip>:~/
+- scp -i <path to ssh key .pem> <path_to_playbook.ini file> ec2-user@<private_ip>:~/
 
-Then save the file and use the below command for build.
-    
-packer build packer.json
-
-
-This will create a custom AMI with the above requirements.
-
-
-
-
-
-B. Terraform scripts to provision AWS resources:
-
-
-VPC, private subnets, public subnets, all necessary routes (use modules)
-
-
-1 bastion host in the public subnet (accept only your IP on port 22)
-
-
-6 EC2 instances in the private subnet using your new AMI created from Packer
-
-
-To implement part B, install terraform in your system locally from the below page
-
-
-https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli
-
-
-The file create_vpc.tf contains code to provision all the above instances.
-
-
-Replace the region in the first two blocks with the appropriate region name.
-          
-          
-
-
-Inside the block bastion_sg, replace the ip address with public ip of device you want to access bastion host from.
-           
-
-
-Replace the ami id with ami id you created  with packer.json in part A inside the blocks bastion_host and private_instance.
-
-
-           
-
-
-
-
-
-Now run the below commands to provision instances.
-
-
-terraform init
-terraform plan
-terraform apply
-
-
-To access private ec2 instances from bastion host , first copy your private key to bastion host and then use it to ssh it to private instances.
-      
-
+## Step 6
+- Install ansible in ansible-controller ec2
+- sudo yum install ansible
+- Run the below command to run the playbook
+- ansible-playbook -i inventory.ini playbook.yml
+- ![Screenshot_2.png](images/Screenshot_2.png)
+- ![Screenshot_3.png](images/Screenshot_3.png)
+- ![Screenshot_4.png](images/Screenshot_4.png)
+- ![Screenshot_5.png](images/Screenshot_5.png)
