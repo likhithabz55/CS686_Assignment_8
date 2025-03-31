@@ -1,0 +1,81 @@
+---
+- name: Update and Upgrade docker and verify disk usage on ec2 instances
+  hosts: all
+  become: true
+
+  tasks:
+
+    - name: Update the packages
+      apt:
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+      when: ansible_os_family == "Debian"
+
+    - name: Update all packages
+      yum:
+        name: '*'
+        state: latest
+      when: ansible_os_family == "RedHat"
+
+    - name: Upgrade all packages
+      yum:
+        name: '*'
+        state: latest
+      when: ansible_os_family == "RedHat"
+
+    - name: Check if Docker is installed
+      command: which docker
+      register: docker_check
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Install Docker if not found (Debian)
+      apt:
+        name: docker.io
+        state: present
+      when: ansible_os_family == "Debian" and docker_check.rc != 0
+
+    - name: Install Docker if not found (RedHat)
+      yum:
+        name: docker
+        state: present
+      when: ansible_os_family == "RedHat" and docker_check.rc != 0
+
+    - name: Ensure docker is installed
+      apt:
+        name: docker.io
+        state: latest
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure docker is installed
+      yum:
+        name: docker
+        state: latest
+      when: ansible_os_family == "RedHat"
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Check docker version
+      command: docker --version
+      register: docker_version
+      ignore_errors: yes
+
+    - name: Report docker version
+      debug:
+        msg: "Docker version : {{ docker_version.stdout }}"
+
+    - name: Report Disk Usage
+      command: df -h
+      register: disk_usage
+
+    - name: Show disk usage
+      debug:
+        msg: "{{ disk_usage.stdout_lines }}"
